@@ -46,12 +46,11 @@ router.put(
 );
 
 // Deactivate user
-router.patch(
-  "/:id/deactivate",
+router.delete(
+  "/:id",
   authenticate,
   authorize("tenant_admin"),
-  tenantIsolation,
-  userController.deactivateUser
+  userController.deleteUser
 );
 
 module.exports = router;
