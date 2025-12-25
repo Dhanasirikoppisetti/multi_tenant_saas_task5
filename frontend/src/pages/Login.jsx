@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
+
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,7 +24,7 @@ export default function Login() {
 
     try {
       await login(form);
-      navigate("/dashboard"); // ✅ redirect on success
+      navigate("/dashboard"); 
     } catch (err) {
       setError(
         err.response?.data?.message || "Login failed"
@@ -33,6 +35,7 @@ export default function Login() {
   };
 
   return (
+    <>
     <form onSubmit={submit}>
       <h2>Login</h2>
 
@@ -63,5 +66,11 @@ export default function Login() {
         {loading ? "Logging in..." : "Login"}
       </button>
     </form>
+    <p style={{ textAlign: "center", marginTop: "15px" }}>
+      New organization? <Link to="/register">Register here</Link>
+    </p>
+
+    </>
+    
   );
 }
