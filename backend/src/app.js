@@ -4,6 +4,7 @@ const authRoutes = require("./routes/auth.routes");
 const tenantRoutes = require("./routes/tenant.routes");
 const userRoutes = require("./routes/user.routes");
 const projectRoutes = require("./routes/project.routes");
+const taskRoutes = require("./routes/task.routes");
 const app = express();
 
 // Middlewares
@@ -13,6 +14,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api", taskRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
