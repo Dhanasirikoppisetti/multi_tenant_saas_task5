@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Projects from "./pages/Projects";
 import ProjectDetails from "./pages/ProjectDetails";
+import Users from "./pages/Users";
+
 
 
 
@@ -41,7 +43,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/users" element={<ProtectedRoute roles={["tenant_admin"]}><div>Users Page</div></ProtectedRoute>} />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute roles={["tenant_admin"]}>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/tenants" element={<ProtectedRoute roles={["super_admin"]}><div>Tenants Page</div></ProtectedRoute>} />
 
         </Routes>
