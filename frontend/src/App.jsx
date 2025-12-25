@@ -10,7 +10,6 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
-
           <Route path="/login" element={<Login />} />
 
           <Route
@@ -21,6 +20,10 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/projects" element={<ProtectedRoute><div>Projects Page</div></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute roles={["tenant_admin"]}><div>Users Page</div></ProtectedRoute>} />
+          <Route path="/tenants" element={<ProtectedRoute roles={["super_admin"]}><div>Tenants Page</div></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -1,13 +1,22 @@
 import { useAuth } from "../context/AuthContext";
+import Layout from "../components/Layout";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <div>
-      <h2>Welcome {user.fullName}</h2>
-      <p>Role: {user.role}</p>
-      <button onClick={logout}>Logout</button>
-    </div>
+    <Layout>
+      <h2>Dashboard</h2>
+
+      <p>Welcome, <b>{user.fullName}</b></p>
+      <p>Role: <b>{user.role}</b></p>
+
+      {user.tenant && (
+        <>
+          <p>Tenant: <b>{user.tenant.name}</b></p>
+          <p>Plan: <b>{user.tenant.subscriptionPlan}</b></p>
+        </>
+      )}
+    </Layout>
   );
 }
