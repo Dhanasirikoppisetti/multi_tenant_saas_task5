@@ -136,36 +136,69 @@ exports.updateUser = async (req, res) => {
 // -----------------------------
 // DEACTIVATE USER
 // -----------------------------
-exports.deactivateUser = async (req, res) => {
+exports.deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
     const user = await prisma.user.findFirst({
       where: { id, tenantId: req.tenantId },
     });
+
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    const updated = await prisma.user.update({
+    // 🔒 Prevent deleting yourself
+    if (id === req.user.userId) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot delete your own account",
+      });
+    }
+
+    // 🔒 Prevent deleting last tenant admin
+    if (user.role === "tenant_admin") {
+      const adminCount = await prisma.user.count({
+        where: {
+          tenantId: req.tenantId,
+          role: "tenant_admin",
+        },
+      });
+
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Tenant must have at least one admin",
+        });
+      }
+    }
+
+    await prisma.user.delete({
       where: { id },
-      data: { isActive: false },
     });
 
     await logAudit({
       tenantId: req.tenantId,
       userId: req.user.userId,
-      action: "DEACTIVATE_USER",
+      action: "DELETE_USER",
       entityType: "user",
-      entityId: updated.id,
+      entityId: id,
       ipAddress: req.ip,
     });
 
-    return res
-      .status(200)
-      .json({ success: true, message: "User deactivated" });
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
