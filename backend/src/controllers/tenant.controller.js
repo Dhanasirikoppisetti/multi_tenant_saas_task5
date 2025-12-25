@@ -35,9 +35,7 @@ exports.updateMyTenant = async (req, res) => {
   try {
     const tenant = await prisma.tenant.update({
       where: { id: req.tenantId },
-      data: {
-        name,
-      },
+      data: { name },
     });
 
     await logAudit({
@@ -78,3 +76,67 @@ exports.listTenants = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// -----------------------------
+// UPDATE TENANT PLAN (SUPER ADMIN)
+// -----------------------------
+exports.updateTenantPlan = async (req, res) => {
+  const { subscriptionPlan } = req.body;
+
+  const PLAN_LIMITS = {
+    free: { maxUsers: 5, maxProjects: 5 },
+    pro: { maxUsers: 25, maxProjects: 15 },
+    enterprise: { maxUsers: 100, maxProjects: 50 },
+  };
+
+  const limits = PLAN_LIMITS[subscriptionPlan];
+  if (!limits) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid plan" });
+  }
+
+  const tenant = await prisma.tenant.update({
+    where: { id: req.params.id },
+    data: {
+      subscriptionPlan,
+      maxUsers: limits.maxUsers,
+      maxProjects: limits.maxProjects,
+    },
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: tenant,
+  });
+};
+
+exports.updateTenantStatus = async (req, res) => {
+  const { status } = req.body;
+
+  if (!["active", "suspended"].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid tenant status",
+    });
+  }
+
+  try {
+    const tenant = await prisma.tenant.update({
+      where: { id: req.params.id },
+      data: { status },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: tenant,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
