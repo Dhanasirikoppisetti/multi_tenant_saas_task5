@@ -31,7 +31,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@database:5432/saas_db
       JWT_SECRET: this_is_a_test_jwt_secret_key_32_chars
       JWT_EXPIRES_IN: 24h
-      FRONTEND_URL: http://frontend:3000
+      FRONTEND_URL: http://localhost:3000
       NODE_ENV: production
     depends_on:
       database:
@@ -48,7 +48,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      VITE_API_URL: http://backend:5000/api
+      VITE_API_URL: http://localhost:5000/api
     depends_on:
       backend:
         condition: service_healthy
