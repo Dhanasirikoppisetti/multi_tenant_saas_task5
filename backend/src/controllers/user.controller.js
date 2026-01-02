@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 
 const prisma = require("../config/prisma");
-const logAudit = require("../utils/auditLogger");
 
 // -----------------------------
 // CREATE USER
@@ -16,56 +15,64 @@ exports.createUser = async (req, res) => {
   const { email, password, fullName, role } = req.body;
 
   try {
-    // Enforce per-tenant unique email
-    const existing = await prisma.user.findFirst({
-      where: { email, tenantId: req.tenantId },
-    });
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists in this tenant",
+    const result = await prisma.$transaction(async (tx) => {
+      // Enforce per-tenant unique email
+      const existing = await tx.user.findFirst({
+        where: { email, tenantId: req.tenantId },
       });
-    }
+      if (existing) {
+        throw {
+          status: 409,
+          message: "Email already exists in this tenant",
+        };
+      }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        passwordHash,
-        fullName,
-        role,
-        tenantId: req.tenantId,
-      },
-    });
+      const user = await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          fullName,
+          role,
+          tenantId: req.tenantId,
+        },
+      });
 
-    await logAudit({
-      tenantId: req.tenantId,
-      userId: req.user.userId,
-      action: "CREATE_USER",
-      entityType: "user",
-      entityId: user.id,
-      ipAddress: req.ip,
+      await tx.auditLog.create({
+        data: {
+          tenantId: req.tenantId,
+          userId: req.user.userId,
+          action: "CREATE_USER",
+          entityType: "user",
+          entityId: user.id,
+          ipAddress: req.ip,
+        },
+      });
+
+      return user;
     });
 
     return res.status(201).json({
       success: true,
       data: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        isActive: user.isActive,
+        id: result.id,
+        email: result.email,
+        fullName: result.fullName,
+        role: result.role,
+        isActive: result.isActive,
       },
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message || "Server error" });
   }
 };
 
 // -----------------------------
-// LIST USERS
+// LIST USERS (READ ONLY)
 // -----------------------------
 exports.listUsers = async (req, res) => {
   try {
@@ -102,91 +109,100 @@ exports.updateUser = async (req, res) => {
   const { fullName, role } = req.body;
 
   try {
-    const user = await prisma.user.findFirst({
-      where: { id, tenantId: req.tenantId },
-    });
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: { id, tenantId: req.tenantId },
+      });
+      if (!user) {
+        throw { status: 404, message: "User not found" };
+      }
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: {
-        ...(fullName && { fullName }),
-        ...(role && { role }),
-      },
+      const updated = await tx.user.update({
+        where: { id, tenantId: req.tenantId },
+        data: {
+          ...(fullName !== undefined && { fullName }),
+          ...(role !== undefined && { role }),
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId: req.tenantId,
+          userId: req.user.userId,
+          action: "UPDATE_USER",
+          entityType: "user",
+          entityId: updated.id,
+          ipAddress: req.ip,
+        },
+      });
+
+      return updated;
     });
 
-    await logAudit({
-      tenantId: req.tenantId,
-      userId: req.user.userId,
-      action: "UPDATE_USER",
-      entityType: "user",
-      entityId: updated.id,
-      ipAddress: req.ip,
-    });
-
-    return res.status(200).json({ success: true, data: updated });
+    return res.status(200).json({ success: true, data: result });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message || "Server error" });
   }
 };
 
 // -----------------------------
-// DEACTIVATE USER
+// DELETE (DEACTIVATE) USER
 // -----------------------------
 exports.deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await prisma.user.findFirst({
-      where: { id, tenantId: req.tenantId },
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
+    await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: { id, tenantId: req.tenantId },
       });
-    }
 
-    // 🔒 Prevent deleting yourself
-    if (id === req.user.userId) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot delete your own account",
+      if (!user) {
+        throw { status: 404, message: "User not found" };
+      }
+
+      // Prevent deleting yourself
+      if (id === req.user.userId) {
+        throw {
+          status: 400,
+          message: "You cannot delete your own account",
+        };
+      }
+
+      // Prevent deleting last tenant admin
+      if (user.role === "tenant_admin") {
+        const adminCount = await tx.user.count({
+          where: {
+            tenantId: req.tenantId,
+            role: "tenant_admin",
+          },
+        });
+
+        if (adminCount <= 1) {
+          throw {
+            status: 400,
+            message: "Tenant must have at least one admin",
+          };
+        }
+      }
+
+      await tx.user.delete({
+        where: { id, tenantId: req.tenantId },
       });
-    }
 
-    // 🔒 Prevent deleting last tenant admin
-    if (user.role === "tenant_admin") {
-      const adminCount = await prisma.user.count({
-        where: {
+      await tx.auditLog.create({
+        data: {
           tenantId: req.tenantId,
-          role: "tenant_admin",
+          userId: req.user.userId,
+          action: "DELETE_USER",
+          entityType: "user",
+          entityId: id,
+          ipAddress: req.ip,
         },
       });
-
-      if (adminCount <= 1) {
-        return res.status(400).json({
-          success: false,
-          message: "Tenant must have at least one admin",
-        });
-      }
-    }
-
-    await prisma.user.delete({
-      where: { id },
-    });
-
-    await logAudit({
-      tenantId: req.tenantId,
-      userId: req.user.userId,
-      action: "DELETE_USER",
-      entityType: "user",
-      entityId: id,
-      ipAddress: req.ip,
     });
 
     return res.status(200).json({
@@ -195,10 +211,8 @@ exports.deleteUser = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message || "Server error" });
   }
 };
-

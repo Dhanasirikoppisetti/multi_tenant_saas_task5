@@ -103,6 +103,8 @@ cd multi-tenant-saas-platform
 ### Docker Setup (Recommended)
 
 ```bash
+docker compose down
+
 docker-compose up --build
 ```
 

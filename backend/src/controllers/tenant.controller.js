@@ -1,8 +1,7 @@
 const prisma = require("../config/prisma");
-const logAudit = require("../utils/auditLogger");
 
 // -----------------------------
-// GET CURRENT TENANT
+// GET CURRENT TENANT (READ ONLY)
 // -----------------------------
 exports.getMyTenant = async (req, res) => {
   try {
@@ -33,24 +32,32 @@ exports.updateMyTenant = async (req, res) => {
   const { name } = req.body;
 
   try {
-    const tenant = await prisma.tenant.update({
-      where: { id: req.tenantId },
-      data: { name },
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.update({
+        where: { id: req.tenantId },
+        data: {
+          ...(name !== undefined && { name }),
+        },
+      });
 
-    await logAudit({
-      tenantId: tenant.id,
-      userId: req.user.userId,
-      action: "UPDATE_TENANT",
-      entityType: "tenant",
-      entityId: tenant.id,
-      ipAddress: req.ip,
+      await tx.auditLog.create({
+        data: {
+          tenantId: tenant.id,
+          userId: req.user.userId,
+          action: "UPDATE_TENANT",
+          entityType: "tenant",
+          entityId: tenant.id,
+          ipAddress: req.ip,
+        },
+      });
+
+      return tenant;
     });
 
     return res.status(200).json({
       success: true,
       message: "Tenant updated successfully",
-      data: tenant,
+      data: result,
     });
   } catch (error) {
     console.error(error);
@@ -59,7 +66,7 @@ exports.updateMyTenant = async (req, res) => {
 };
 
 // -----------------------------
-// LIST ALL TENANTS (SUPER ADMIN)
+// LIST ALL TENANTS (SUPER ADMIN – READ)
 // -----------------------------
 exports.listTenants = async (req, res) => {
   try {
@@ -96,21 +103,47 @@ exports.updateTenantPlan = async (req, res) => {
       .json({ success: false, message: "Invalid plan" });
   }
 
-  const tenant = await prisma.tenant.update({
-    where: { id: req.params.id },
-    data: {
-      subscriptionPlan,
-      maxUsers: limits.maxUsers,
-      maxProjects: limits.maxProjects,
-    },
-  });
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.update({
+        where: { id: req.params.id },
+        data: {
+          subscriptionPlan,
+          maxUsers: limits.maxUsers,
+          maxProjects: limits.maxProjects,
+        },
+      });
 
-  return res.status(200).json({
-    success: true,
-    data: tenant,
-  });
+      await tx.auditLog.create({
+        data: {
+          tenantId: tenant.id,
+          userId: req.user.userId,
+          action: "UPDATE_TENANT_PLAN",
+          entityType: "tenant",
+          entityId: tenant.id,
+          ipAddress: req.ip,
+        },
+      });
+
+      return tenant;
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
+// -----------------------------
+// UPDATE TENANT STATUS (SUPER ADMIN)
+// -----------------------------
 exports.updateTenantStatus = async (req, res) => {
   const { status } = req.body;
 
@@ -122,14 +155,29 @@ exports.updateTenantStatus = async (req, res) => {
   }
 
   try {
-    const tenant = await prisma.tenant.update({
-      where: { id: req.params.id },
-      data: { status },
+    const result = await prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.update({
+        where: { id: req.params.id },
+        data: { status },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId: tenant.id,
+          userId: req.user.userId,
+          action: "UPDATE_TENANT_STATUS",
+          entityType: "tenant",
+          entityId: tenant.id,
+          ipAddress: req.ip,
+        },
+      });
+
+      return tenant;
     });
 
     return res.status(200).json({
       success: true,
-      data: tenant,
+      data: result,
     });
   } catch (error) {
     console.error(error);
@@ -139,4 +187,3 @@ exports.updateTenantStatus = async (req, res) => {
     });
   }
 };
-

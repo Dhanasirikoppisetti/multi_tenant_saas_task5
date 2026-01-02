@@ -3,7 +3,6 @@ const { validationResult } = require("express-validator");
 
 const prisma = require("../config/prisma");
 const { generateToken } = require("../utils/jwt");
-const logAudit = require("../utils/auditLogger");
 
 // -----------------------------
 // REGISTER TENANT
@@ -14,35 +13,35 @@ exports.registerTenant = async (req, res) => {
     return res.status(400).json({ success: false, errors: errors.array() });
   }
 
-  const { tenantName, subdomain, adminEmail, adminPassword, adminFullName } =
-    req.body;
+  const {
+    tenantName,
+    subdomain,
+    adminEmail,
+    adminPassword,
+    adminFullName,
+  } = req.body;
 
   try {
-    // Check subdomain uniqueness
     const existingTenant = await prisma.tenant.findUnique({
       where: { subdomain },
     });
     if (existingTenant) {
-      return res.status(409).json({
-        success: false,
-        message: "Subdomain already exists",
-      });
+      return res
+        .status(409)
+        .json({ success: false, message: "Subdomain already exists" });
     }
 
-    // Check email uniqueness globally for safety
     const existingUser = await prisma.user.findFirst({
       where: { email: adminEmail },
     });
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists",
-      });
+      return res
+        .status(409)
+        .json({ success: false, message: "Email already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-    // Transaction: tenant + admin user
     const result = await prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
@@ -65,16 +64,18 @@ exports.registerTenant = async (req, res) => {
         },
       });
 
-      return { tenant, adminUser };
-    });
+      await tx.auditLog.create({
+        data: {
+          tenantId: tenant.id,
+          userId: adminUser.id,
+          action: "REGISTER_TENANT",
+          entityType: "tenant",
+          entityId: tenant.id,
+          ipAddress: req.ip,
+        },
+      });
 
-    await logAudit({
-      tenantId: result.tenant.id,
-      userId: result.adminUser.id,
-      action: "REGISTER_TENANT",
-      entityType: "tenant",
-      entityId: result.tenant.id,
-      ipAddress: req.ip,
+      return { tenant, adminUser };
     });
 
     return res.status(201).json({
@@ -109,15 +110,10 @@ exports.login = async (req, res) => {
   const { email, password, tenantSubdomain } = req.body;
 
   try {
-    // -------------------------
     // SUPER ADMIN LOGIN
-    // -------------------------
     if (!tenantSubdomain) {
       const user = await prisma.user.findFirst({
-        where: {
-          email,
-          role: "super_admin",
-        },
+        where: { email, role: "super_admin" },
       });
 
       if (!user || !user.isActive) {
@@ -142,12 +138,14 @@ exports.login = async (req, res) => {
         role: user.role,
       });
 
-      await logAudit({
-        userId: user.id,
-        action: "LOGIN_SUPER_ADMIN",
-        entityType: "user",
-        entityId: user.id,
-        ipAddress: req.ip,
+      await prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "LOGIN_SUPER_ADMIN",
+          entityType: "user",
+          entityId: user.id,
+          ipAddress: req.ip,
+        },
       });
 
       return res.status(200).json({
@@ -164,30 +162,19 @@ exports.login = async (req, res) => {
       });
     }
 
-    // -------------------------
     // TENANT USER LOGIN
-    // -------------------------
     const tenant = await prisma.tenant.findUnique({
       where: { subdomain: tenantSubdomain },
     });
 
-    if (!tenant) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Tenant not found" });
-    }
-
-    if (tenant.status !== "active") {
+    if (!tenant || tenant.status !== "active") {
       return res
         .status(403)
-        .json({ success: false, message: "Tenant is not active" });
+        .json({ success: false, message: "Tenant not accessible" });
     }
 
     const user = await prisma.user.findFirst({
-      where: {
-        email,
-        tenantId: tenant.id,
-      },
+      where: { email, tenantId: tenant.id },
     });
 
     if (!user || !user.isActive) {
@@ -212,13 +199,15 @@ exports.login = async (req, res) => {
       role: user.role,
     });
 
-    await logAudit({
-      tenantId: tenant.id,
-      userId: user.id,
-      action: "LOGIN",
-      entityType: "user",
-      entityId: user.id,
-      ipAddress: req.ip,
+    await prisma.auditLog.create({
+      data: {
+        tenantId: tenant.id,
+        userId: user.id,
+        action: "LOGIN",
+        entityType: "user",
+        entityId: user.id,
+        ipAddress: req.ip,
+      },
     });
 
     return res.status(200).json({
@@ -241,15 +230,13 @@ exports.login = async (req, res) => {
 };
 
 // -----------------------------
-// ME
+// ME (READ ONLY)
 // -----------------------------
 exports.me = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      include: {
-        tenant: true,
-      },
+      include: { tenant: true },
     });
 
     if (!user) {
@@ -288,13 +275,15 @@ exports.me = async (req, res) => {
 // LOGOUT
 // -----------------------------
 exports.logout = async (req, res) => {
-  await logAudit({
-    tenantId: req.user.tenantId,
-    userId: req.user.userId,
-    action: "LOGOUT",
-    entityType: "user",
-    entityId: req.user.userId,
-    ipAddress: req.ip,
+  await prisma.auditLog.create({
+    data: {
+      tenantId: req.user.tenantId,
+      userId: req.user.userId,
+      action: "LOGOUT",
+      entityType: "user",
+      entityId: req.user.userId,
+      ipAddress: req.ip,
+    },
   });
 
   return res.status(200).json({
