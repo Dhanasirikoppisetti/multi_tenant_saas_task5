@@ -1,9 +1,9 @@
 const express = require("express");
 
 const tenantController = require("../controllers/tenant.controller");
-const authenticate = require("../middleware/auth");
-const authorize = require("../middleware/authorize");
-const tenantIsolation = require("../middleware/tenantIsolation");
+const authenticate = require("../middleware/auth.middleware");
+const authorize = require("../middleware/authorize.middleware");
+const tenantIsolation = require("../middleware/tenantIsolation.middleware");
 
 const router = express.Router();
 

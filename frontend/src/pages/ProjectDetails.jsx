@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Layout from "../components/Layout";
-import api from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import AppLayout from "../components/AppLayout";
+import api from "../services/httpClient";
+import { useAuth } from "../context/AuthProvider";
+import "../styles/pages/projectDetails.css";
+
+
+
 
 export default function ProjectDetails() {
     const { projectId } = useParams();
@@ -152,293 +156,325 @@ const updateTaskFull = async (taskId) => {
     );
   }
 };
+  if (!project) return <AppLayout>Loading...</AppLayout>;
 
+  if (!project) return <AppLayout>Loading...</AppLayout>;
 
+const isTenantAdmin = user?.role === "tenant_admin";
 
+return (
+  <AppLayout>
+    <div className="project-details-page">
+      {/* Header card */}
+      <div className="project-header-card">
+        <div className="project-header-top">
+          <h1>{project.name}</h1>
+          <span className={`status-badge status-${project.status}`}>
+            {project.status}
+          </span>
+        </div>
+        <p className="project-description">
+          {project.description || "No description"}
+        </p>
+      </div>
 
-  if (!project) return <Layout>Loading...</Layout>;
+      {/* Main grid: form + tasks */}
+      <div className="project-main">
+        {/* LEFT: create / edit task form */}
+        <div className="task-form-card">
+          <h2>{editingTaskId ? "Edit Task" : "Create New Task"}</h2>
 
-  return (
-    <Layout>
-        <h2>{project.name}</h2>
-        <p>Status: {project.status}</p>
-
-        <h3>Tasks</h3>
-        {user.role === "tenant_admin" && (
-        <form
-            onSubmit={createTask}
-            style={{
-            marginTop: "40px",
-            padding: "20px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            maxWidth: "500px",
-            }}
-        >
-            <h3>Create New Task</h3>
-
-            <div style={{ marginBottom: "10px" }}>
-            <label>Title</label>
-            <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                style={{ width: "100%" }}
-            />
-            </div>
-
-            <div style={{ marginBottom: "10px" }}>
-            <label>Description</label>
-            <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                style={{ width: "100%" }}
-            />
-            </div>
-
-            <div style={{ marginBottom: "10px" }}>
-            <label>Priority</label>
-            <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                style={{ width: "100%" }}
-            >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-            </select>
-            </div>
-
-            <div style={{ marginBottom: "10px" }}>
-            <label>Assign To</label>
-            <select
-                value={assignedToId}
-                onChange={(e) => setAssignedToId(e.target.value)}
-                style={{ width: "100%" }}
-            >
-                <option value="">Unassigned</option>
-                {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                    {u.fullName} ({u.role})
-                </option>
-                ))}
-            </select>
-            </div>
-
-            <div style={{ marginBottom: "15px" }}>
-            <label>Due Date</label>
-            <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                style={{ width: "100%" }}
-            />
-            </div>
-
-            <button type="submit">Create Task</button>
-        </form>
-        )}
-
-        <ul style={{ listStyle: "none", padding: 0 }}>
-        {tasks.map((t) => (
-            <li
-            key={t.id}
-            style={{
-                border: "1px solid #ddd",
-                borderRadius: "6px",
-                padding: "15px",
-                marginBottom: "15px",
-            }}
-            >
-            {/* ---------------- EDIT MODE ---------------- */}
-            {editingTaskId === t.id ? (
-                <>
-                    <h4>Edit Task</h4>
-
-                    <div style={{ marginBottom: "10px" }}>
+          {isTenantAdmin ? (
+            editingTaskId ? (
+              /* EDIT FORM */
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  updateTaskFull(editingTaskId);
+                }}
+              >
+                <div className="form-row">
+                  <div style={{ width: "100%" }}>
                     <label>Title</label>
                     <input
-                        style={{ width: "100%" }}
-                        value={editForm.title}
-                        onChange={(e) =>
+                      value={editForm.title}
+                      onChange={(e) =>
                         setEditForm({ ...editForm, title: e.target.value })
-                        }
+                      }
+                      required
                     />
-                    </div>
+                  </div>
+                </div>
 
-                    <div style={{ marginBottom: "10px" }}>
+                <div className="form-row">
+                  <div style={{ width: "100%" }}>
                     <label>Description</label>
                     <textarea
-                        style={{ width: "100%" }}
-                        value={editForm.description}
-                        onChange={(e) =>
+                      value={editForm.description}
+                      onChange={(e) =>
                         setEditForm({
-                            ...editForm,
-                            description: e.target.value,
+                          ...editForm,
+                          description: e.target.value,
                         })
-                        }
+                      }
                     />
-                    </div>
+                  </div>
+                </div>
 
-                    <div style={{ marginBottom: "10px" }}>
+                <div className="form-row">
+                  <div>
                     <label>Priority</label>
                     <select
-                        style={{ width: "100%" }}
-                        value={editForm.priority}
-                        onChange={(e) =>
+                      value={editForm.priority}
+                      onChange={(e) =>
                         setEditForm({
-                            ...editForm,
-                            priority: e.target.value,
+                          ...editForm,
+                          priority: e.target.value,
                         })
-                        }
+                      }
                     >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
                     </select>
-                    </div>
+                  </div>
 
-                    <div style={{ marginBottom: "10px" }}>
-                    <label>Assign To</label>
+                  <div>
+                    <label>Assign to</label>
                     <select
-                        style={{ width: "100%" }}
-                        value={editForm.assignedToId}
-                        onChange={(e) =>
+                      value={editForm.assignedToId}
+                      onChange={(e) =>
                         setEditForm({
-                            ...editForm,
-                            assignedToId: e.target.value,
+                          ...editForm,
+                          assignedToId: e.target.value,
                         })
-                        }
+                      }
                     >
-                        <option value="">Unassigned</option>
-                        {users.map((u) => (
+                      <option value="">Unassigned</option>
+                      {users.map((u) => (
                         <option key={u.id} value={u.id}>
-                            {u.fullName}
+                          {u.fullName}
                         </option>
-                        ))}
+                      ))}
                     </select>
-                    </div>
+                  </div>
+                </div>
 
-                    <div style={{ marginBottom: "10px" }}>
+                <div className="form-row">
+                  <div>
                     <label>Status</label>
                     <select
-                        style={{ width: "100%" }}
-                        value={editForm.status}
-                        onChange={(e) =>
+                      value={editForm.status}
+                      onChange={(e) =>
                         setEditForm({
-                            ...editForm,
-                            status: e.target.value,
+                          ...editForm,
+                          status: e.target.value,
                         })
-                        }
+                      }
                     >
-                        <option value="todo">Todo</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
+                      <option value="todo">Todo</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
                     </select>
-                    </div>
+                  </div>
 
-                    <div style={{ marginBottom: "15px" }}>
-                    <label>Due Date</label>
+                  <div>
+                    <label>Due date</label>
                     <input
-                        type="date"
-                        style={{ width: "100%" }}
-                        value={editForm.dueDate}
-                        onChange={(e) =>
+                      type="date"
+                      value={editForm.dueDate}
+                      onChange={(e) =>
                         setEditForm({
-                            ...editForm,
-                            dueDate: e.target.value,
+                          ...editForm,
+                          dueDate: e.target.value,
                         })
-                        }
+                      }
                     />
-                    </div>
+                  </div>
+                </div>
 
-                    <button onClick={() => updateTaskFull(t.id)}>
+                <div className="form-actions">
+                  <button type="submit" className="btn-primary">
                     Save
-                    </button>{" "}
-                    <button onClick={() => setEditingTaskId(null)}>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setEditingTaskId(null)}
+                  >
                     Cancel
-                    </button>
-                </>
-                ) : (
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* CREATE FORM */
+              <form onSubmit={createTask}>
+                <div className="form-row">
+                  <div style={{ width: "100%" }}>
+                    <label>Title</label>
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
 
-                <>
-                {/* ---------------- VIEW MODE ---------------- */}
-                <h4>{t.title}</h4>
+                <div className="form-row">
+                  <div style={{ width: "100%" }}>
+                    <label>Description</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-                {t.description && <p>{t.description}</p>}
+                <div className="form-row">
+                  <div>
+                    <label>Priority</label>
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
 
-                <p>
-                    <b>Status:</b> {t.status}
-                </p>
-                <p>
-                    <b>Priority:</b> {t.priority}
-                </p>
-                
-                <p>
-                <b>Assigned:</b>{" "}
-                {user.role === "tenant_admin" ? (
-                    users.find((u) => u.id === t.assignedToId)?.fullName || "Unassigned"
-                ) : !t.assignedToId ? (
-                    "Not assigned"
-                ) : t.assignedToId === user.id ? (
-                    "Assigned to you"
-                ) : (
-                    "Not assigned to you"
-                )}
-                </p>
+                  <div>
+                    <label>Assign to</label>
+                    <select
+                      value={assignedToId}
+                      onChange={(e) => setAssignedToId(e.target.value)}
+                    >
+                      <option value="">Unassigned</option>
+                      {users.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.fullName} ({u.role})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
+                <div className="form-row">
+                  <div>
+                    <label>Due date</label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                    />
+                  </div>
+                </div>
 
+                <div className="form-actions">
+                  <button type="submit" className="btn-primary">
+                    Create task
+                  </button>
+                </div>
+              </form>
+            )
+          ) : (
+            <p className="project-edit-muted">
+              Only tenant admins can create or edit tasks.
+            </p>
+          )}
+        </div>
 
-                {t.dueDate && (
-                    <p>
-                    <b>Due:</b>{" "}
-                    {new Date(t.dueDate).toLocaleDateString()}
-                    </p>
-                )}
+        {/* RIGHT: tasks list */}
+        <div className="tasks-card">
+          <h2>Tasks</h2>
 
-                {/* ADMIN CONTROLS */}
-                {user.role === "tenant_admin" && (
-                    <button onClick={() => startEdit(t)}>
-                    Edit
-                    </button>
-                )}
+          <div className="tasks-table">
+            <div className="tasks-header-row">
+              <div>Title</div>
+              <div>Status</div>
+              <div>Priority</div>
+              <div>Assignee</div>
+              <div>Due</div>
+              <div>Actions</div>
+            </div>
 
-                {/* USER STATUS CONTROL */}
-                {user.role === "user" &&
-                    t.assignedToId === user.id && (
-                    <div >
-                        <button style={{padding:"8px", margin:"10px"}}
-                        onClick={() =>
-                            updateStatus(t.id, "todo")
-                        }
-                        >
-                        Todo
-                        </button>
-                        <button style={{padding:"8px", margin:"10px"}}
-                        onClick={() =>
-                            updateStatus(t.id, "in_progress")
-                        }
-                        >
-                        In Progress
-                        </button>
-                        <button style={{padding:"8px", margin:"10px"}}
-                        onClick={() =>
-                            updateStatus(t.id, "completed")
-                        }
-                        >
-                        Completed
-                        </button>
-                    </div>
-                    )}
-                </>
+            {tasks.length === 0 && (
+              <div className="empty-row">No tasks yet</div>
             )}
-            </li>
-        ))}
-        </ul>
 
+            {tasks.map((t) => (
+              <div key={t.id} className="task-row">
+                <div>{t.title}</div>
+                <div>
+                  <span className={`status-pill status-${t.status}`}>
+                    {t.status.replace("_", " ")}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    className={`priority-pill priority-${t.priority}`}
+                  >
+                    {t.priority}
+                  </span>
+                </div>
+                <div>
+                  {isTenantAdmin
+                    ? users.find((u) => u.id === t.assignedToId)?.fullName ||
+                      "Unassigned"
+                    : !t.assignedToId
+                    ? "Not assigned"
+                    : t.assignedToId === user.id
+                    ? "Assigned to you"
+                    : "Not assigned to you"}
+                </div>
+                <div>
+                  {t.dueDate
+                    ? new Date(t.dueDate).toLocaleDateString()
+                    : "-"}
+                </div>
+                <div className="task-actions">
+                  {isTenantAdmin && (
+                    <button
+                      className="btn-secondary"
+                      onClick={() => startEdit(t)}
+                    >
+                      Edit
+                    </button>
+                  )}
 
-        {tasks.length === 0 && <p>No tasks yet</p>}
-    </Layout>
-  );
+                  {user.role === "user" && t.assignedToId === user.id && (
+                    <>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => updateStatus(t.id, "todo")}
+                      >
+                        Todo
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        onClick={() =>
+                          updateStatus(t.id, "in_progress")
+                        }
+                      >
+                        In progress
+                      </button>
+                      <button
+                        className="btn-primary"
+                        onClick={() =>
+                          updateStatus(t.id, "completed")
+                        }
+                      >
+                        Completed
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </AppLayout>
+);
 }

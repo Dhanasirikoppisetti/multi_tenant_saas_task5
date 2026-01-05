@@ -1,12 +1,13 @@
+version: '3.8'
 
 services:
   database:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: database
     environment:
-      POSTGRES_DB: saas_db
+      POSTGRES_DB: multi_tenant_saas_task5
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: Dhanasiri.18
     ports:
       - "5432:5432"
     volumes:
@@ -18,37 +19,43 @@ services:
       retries: 5
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: backend
     ports:
       - "5000:5000"
     environment:
       DB_HOST: database
       DB_PORT: 5432
-      DB_NAME: saas_db
+      DB_NAME: multi_tenant_saas_task5
       DB_USER: postgres
-      DB_PASSWORD: postgres
-      DATABASE_URL: postgresql://postgres:postgres@database:5432/saas_db
-      JWT_SECRET: this_is_a_test_jwt_secret_key_32_chars
+      DB_PASSWORD: Dhanasiri.18
+      JWT_SECRET: super_secret_jwt_key_minimum_32_characters_long_dev_only
       JWT_EXPIRES_IN: 24h
-      FRONTEND_URL: http://localhost:3000
-      NODE_ENV: production
+      PORT: 5000
+      FRONTEND_URL: http://frontend:3000
+      DATABASE_URL: postgresql://postgres:Dhanasiri.18@database:5432/multi_tenant_saas_task5?schema=public
     depends_on:
       database:
         condition: service_healthy
+    command: npm start
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 10s
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: frontend
     ports:
       - "3000:3000"
     environment:
-      VITE_API_URL: http://localhost:5000/api
+      REACT_APP_API_URL: http://localhost:5000/api
     depends_on:
       backend:
         condition: service_healthy

@@ -1,6 +1,6 @@
 const { validationResult } = require("express-validator");
 const prisma = require("../config/prisma");
-const logAudit = require("../utils/auditLogger");
+const logAudit = require("../utils/audit.logger");
 
 // -----------------------------
 // CREATE PROJECT

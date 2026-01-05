@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import api from "../services/api";
+import AppLayout from "../components/AppLayout";
+import api from "../services/httpClient";
+import "../styles/pages/users.css";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
 
-  // create/edit state
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     email: "",
@@ -58,120 +58,153 @@ export default function Users() {
   };
 
   const deleteUser = async (id) => {
-  if (!window.confirm("Delete this user permanently?")) return;
-  await api.delete(`/users/${id}`);
-  fetchUsers();
-};
+    if (!window.confirm("Delete this user permanently?")) return;
+    await api.delete(`/users/${id}`);
+    fetchUsers();
+  };
 
   return (
-    <Layout>
-      <h2>Users</h2>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <button onClick={startAdd}>Add User</button>
-
-      {/* ADD / EDIT FORM */}
-      {editingId && (
-        <div
-          style={{
-            marginTop: "15px",
-            padding: "15px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            maxWidth: "500px",
-          }}
-        >
-          <h3>{editingId === "new" ? "Add User" : "Edit User"}</h3>
-
-          {editingId === "new" && (
-            <div style={{ marginBottom: "10px" }}>
-              <label>Email</label>
-              <input
-                style={{ width: "100%" }}
-                value={form.email}
-                onChange={(e) =>
-                  setForm({ ...form, email: e.target.value })
-                }
-              />
-            </div>
-          )}
-
-          <div style={{ marginBottom: "10px" }}>
-            <label>Full Name</label>
-            <input
-              style={{ width: "100%" }}
-              value={form.fullName}
-              onChange={(e) =>
-                setForm({ ...form, fullName: e.target.value })
-              }
-            />
+    <AppLayout>
+      <div className="users-page">
+        <div className="users-card">
+          <div className="users-header">
+            <h2 className="users-title">Users</h2>
+            <button className="btn btn-primary" onClick={startAdd}>
+              Add user
+            </button>
           </div>
 
-          {editingId === "new" && (
-            <div style={{ marginBottom: "10px" }}>
-              <label>Password</label>
-              <input
-                type="password"
-                style={{ width: "100%" }}
-                value={form.password}
-                onChange={(e) =>
-                  setForm({ ...form, password: e.target.value })
-                }
-              />
-            </div>
-          )}
+          {error && <p className="users-error">{error}</p>}
 
-          <div style={{ marginBottom: "15px" }}>
-            <label>Role</label>
-            <select
-              style={{ width: "100%" }}
-              value={form.role}
-              onChange={(e) =>
-                setForm({ ...form, role: e.target.value })
-              }
-            >
-              <option value="user">User</option>
-              <option value="tenant_admin">Tenant Admin</option>
-            </select>
-          </div>
+          {/* ADD / EDIT FORM */}
+          {editingId && (
+            <div className="users-form-card">
+              <h3 className="users-form-title">
+                {editingId === "new" ? "Add user" : "Edit user"}
+              </h3>
 
-          <button onClick={save}>Save</button>{" "}
-          <button onClick={() => setEditingId(null)}>Cancel</button>
-        </div>
-      )}
-
-      {/* USERS LIST */}
-      <ul style={{ listStyle: "none", padding: 0, marginTop: "20px" }}>
-        {users.map((u) => (
-          <li
-            key={u.id}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-              padding: "12px",
-              marginBottom: "10px",
-            }}
-          >
-            <b>{u.fullName}</b> ({u.email})  
-            <div>Role: {u.role}</div>
-            <div>Status: {u.isActive ? "Active" : "Inactive"}</div>
-
-            <div style={{ marginTop: "8px" }}>
-              <button onClick={() => startEdit(u)}>Edit</button>{" "}
-              {u.isActive && (
-                <button
-                style={{ background: "#dc2626" }}
-                onClick={() => deleteUser(u.id)}
-                >
-                Delete
-                </button>
-
+              {editingId === "new" && (
+                <div className="users-form-field">
+                  <label className="users-form-label">Email</label>
+                  <input
+                    className="users-form-input"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
+                  />
+                </div>
               )}
+
+              <div className="users-form-field">
+                <label className="users-form-label">Full name</label>
+                <input
+                  className="users-form-input"
+                  value={form.fullName}
+                  onChange={(e) =>
+                    setForm({ ...form, fullName: e.target.value })
+                  }
+                />
+              </div>
+
+              {editingId === "new" && (
+                <div className="users-form-field">
+                  <label className="users-form-label">Password</label>
+                  <input
+                    type="password"
+                    className="users-form-input"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="users-form-field">
+                <label className="users-form-label">Role</label>
+                <select
+                  className="users-form-input"
+                  value={form.role}
+                  onChange={(e) =>
+                    setForm({ ...form, role: e.target.value })
+                  }
+                >
+                  <option value="user">User</option>
+                  <option value="tenant_admin">Tenant admin</option>
+                </select>
+              </div>
+
+              <div className="users-form-actions">
+                <button className="btn btn-primary" onClick={save}>
+                  Save
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setEditingId(null)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
-    </Layout>
+          )}
+
+          {/* USERS TABLE */}
+          <div className="users-table-wrapper">
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>Full name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th style={{ width: "140px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td data-label="Full name">{u.fullName}</td>
+                    <td data-label="Email">{u.email}</td>
+                    <td data-label="Role">{u.role}</td>
+                    <td data-label="Status">
+                      <span
+                        className={
+                          u.isActive ? "badge badge-green" : "badge badge-red"
+                        }
+                      >
+                        {u.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td data-label="Actions">
+                      <div className="users-row-actions">
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => startEdit(u)}
+                        >
+                          Edit
+                        </button>
+                        {u.isActive && (
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => deleteUser(u.id)}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {users.length === 0 && (
+            <p className="users-empty">No users found</p>
+          )}
+        </div>
+      </div>
+    </AppLayout>
   );
 }

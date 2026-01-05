@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../services/api";
+import api from "../services/httpClient";
+import "../styles/pages/register.css";
+
 
 export default function Register() {
   const navigate = useNavigate();
@@ -99,25 +101,21 @@ export default function Register() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "480px",
-        margin: "50px auto",
-        padding: "25px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-      }}
-    >
-      <h2 style={{ textAlign: "center" }}>Register Organization</h2>
+  <div className="register-page">
+    <div className="register-card">
+      <h2 className="register-title">Register Organization</h2>
+      <p className="register-subtitle">
+        Create a new tenant with an admin account.
+      </p>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
+      {error && <p className="register-error">{error}</p>}
+      {success && <p className="register-success">{success}</p>}
 
-      <form onSubmit={submit}>
-        <div style={{ marginBottom: "12px" }}>
-          <label>Organization Name</label>
+      <form className="register-form" onSubmit={submit}>
+        <div className="register-field">
+          <label className="register-label">Organization Name</label>
           <input
-            style={{ width: "100%" }}
+            className="register-input"
             name="organizationName"
             value={form.organizationName}
             onChange={handleChange}
@@ -125,25 +123,25 @@ export default function Register() {
           />
         </div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <label>Subdomain</label>
+        <div className="register-field">
+          <label className="register-label">Subdomain</label>
           <input
-            style={{ width: "100%" }}
+            className="register-input"
             name="subdomain"
             value={form.subdomain}
             onChange={handleChange}
             required
           />
-          <small style={{ color: "#555" }}>
+          <span className="register-hint">
             Your workspace URL:{" "}
             <b>{form.subdomain || "yourorg"}.yourapp.com</b>
-          </small>
+          </span>
         </div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <label>Admin Email</label>
+        <div className="register-field">
+          <label className="register-label">Admin Email</label>
           <input
-            style={{ width: "100%" }}
+            className="register-input"
             type="email"
             name="adminEmail"
             placeholder="admin@company.com"
@@ -153,10 +151,10 @@ export default function Register() {
           />
         </div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <label>Admin Full Name</label>
+        <div className="register-field">
+          <label className="register-label">Admin Full Name</label>
           <input
-            style={{ width: "100%" }}
+            className="register-input"
             name="adminFullName"
             value={form.adminFullName}
             onChange={handleChange}
@@ -164,11 +162,11 @@ export default function Register() {
           />
         </div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <label>Password</label>
-          <div style={{ display: "flex", gap: "6px" }}>
+        <div className="register-field">
+          <label className="register-label">Password</label>
+          <div className="register-password-row">
             <input
-              style={{ width: "100%" }}
+              className="register-input"
               type={showPassword ? "text" : "password"}
               name="password"
               value={form.password}
@@ -177,6 +175,7 @@ export default function Register() {
             />
             <button
               type="button"
+              className="register-toggle-btn"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? "Hide" : "View"}
@@ -184,11 +183,11 @@ export default function Register() {
           </div>
         </div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <label>Confirm Password</label>
-          <div style={{ display: "flex", gap: "6px" }}>
+        <div className="register-field">
+          <label className="register-label">Confirm Password</label>
+          <div className="register-password-row">
             <input
-              style={{ width: "100%" }}
+              className="register-input"
               type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               value={form.confirmPassword}
@@ -197,6 +196,7 @@ export default function Register() {
             />
             <button
               type="button"
+              className="register-toggle-btn"
               onClick={() =>
                 setShowConfirmPassword(!showConfirmPassword)
               }
@@ -206,33 +206,33 @@ export default function Register() {
           </div>
         </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            style={{
-              display: "flex",
-              flexDirection: "column-reverse",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <input
-              type="checkbox"
-              name="agree"
-              checked={form.agree}
-              onChange={handleChange}
-            />
-            <span>I agree to Terms & Conditions</span>
-          </label>
+        <div className="register-field register-checkbox-row">
+          <input
+            type="checkbox"
+            name="agree"
+            checked={form.agree}
+            onChange={handleChange}
+          />
+          <span>I agree to Terms &amp; Conditions</span>
         </div>
 
-        <button style={{ width: "100%" }} disabled={loading}>
+        <button
+          type="submit"
+          className="register-submit"
+          disabled={loading}
+        >
           {loading ? "Registering..." : "Register"}
         </button>
       </form>
 
-      <p style={{ textAlign: "center", marginTop: "15px" }}>
-        Already have an account? <Link to="/login">Login</Link>
+      <p className="register-footer">
+        Already have an account?{" "}
+        <Link to="/login" className="register-footer-link">
+          Login
+        </Link>
       </p>
     </div>
-  );
+  </div>
+);
+
 }

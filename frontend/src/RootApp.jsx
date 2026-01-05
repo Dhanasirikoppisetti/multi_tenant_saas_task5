@@ -1,14 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthProvider";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./routes/ProtectedRoute";
+import PrivateRoute from "./routes/PrivateRoute";
 import Projects from "./pages/Projects";
 import ProjectDetails from "./pages/ProjectDetails";
 import Users from "./pages/Users";
 import Register from "./pages/Register";
 import Tenants from "./pages/Tenants";
 
+const healthRoutes = require('./routes/health.routes');
+
+app.use('/api', healthRoutes);
 export default function App() {
   return (
     <AuthProvider>
@@ -22,42 +25,42 @@ export default function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <PrivateRoute>
                 <Dashboard />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
  
           <Route
             path="/projects"
             element={
-              <ProtectedRoute>
+              <PrivateRoute>
                 <Projects />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
           <Route
             path="/projects/:projectId"
             element={
-              <ProtectedRoute>
+              <PrivateRoute>
                 <ProjectDetails />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
           <Route
             path="/users"
             element={
-              <ProtectedRoute roles={["tenant_admin"]}>
+              <PrivateRoute roles={["tenant_admin"]}>
                 <Users />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
           <Route
             path="/tenants"
             element={
-              <ProtectedRoute roles={["super_admin"]}>
+              <PrivateRoute roles={["super_admin"]}>
                 <Tenants />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
 

@@ -262,3 +262,31 @@ exports.deleteTask = async (req, res) => {
       .json({ success: false, message: err.message || "Server error" });
   }
 };
+exports.getMyTasks = async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    const tenantId = req.user.tenantId;
+
+    // Base where clause
+    const where = {
+      assignedToId: userId,
+    };
+
+    // Tenant users ki matrame tenantId filter vey
+    if (tenantId) {
+      where.tenantId = tenantId;
+    }
+
+    const tasks = await prisma.task.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.status(200).json({ success: true, data: tasks });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: 'Server error' });
+  }
+};

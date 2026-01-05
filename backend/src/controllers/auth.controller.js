@@ -1,8 +1,9 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
+
 const { validationResult } = require("express-validator");
 
 const prisma = require("../config/prisma");
-const { generateToken } = require("../utils/jwt");
+const { generateToken } = require("../utils/jwt.util");
 
 // -----------------------------
 // REGISTER TENANT
@@ -111,26 +112,32 @@ exports.login = async (req, res) => {
 
   try {
     // SUPER ADMIN LOGIN
-    if (!tenantSubdomain) {
-      const user = await prisma.user.findFirst({
-        where: { email, role: "super_admin" },
-      });
+  if (!tenantSubdomain) {
+  const user = await prisma.user.findFirst({
+    where: { email, role: "super_admin" },
+  });
 
-      if (!user || !user.isActive) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Invalid credentials" });
-      }
+  console.log("LOGIN DEBUG → user:", user);
 
-      const passwordMatch = await bcrypt.compare(
-        password,
-        user.passwordHash
-      );
-      if (!passwordMatch) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Invalid credentials" });
-      }
+  if (!user || user.isActive === false) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid credentials" });
+  }
+
+  const passwordMatch = await bcrypt.compare(
+    password,
+    user.passwordHash
+  );
+
+  console.log("LOGIN DEBUG → passwordMatch:", passwordMatch);
+
+  if (!passwordMatch) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid credentials" });
+  }
+
 
       const token = generateToken({
         userId: user.id,

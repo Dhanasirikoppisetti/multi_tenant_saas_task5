@@ -1,17 +1,17 @@
 FROM node:18-alpine
 
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm install
+
+COPY db ./db
+RUN cd db && npx prisma generate --schema=schema.prisma
 
 COPY . .
 
-# Prisma needs this
-RUN npx prisma generate
-
 EXPOSE 5000
 
-CMD npx prisma migrate deploy \
- && npx prisma db seed \
- && node src/server.js
+CMD ["npm", "start"]

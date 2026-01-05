@@ -1,18 +1,15 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema file
+// https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 
 /**
  * =======================
@@ -77,6 +74,8 @@ model Tenant {
   projects Project[]
   tasks    Task[]
   audits   AuditLog[]
+
+  @@map("Tenant")
 }
 
 model User {
@@ -96,6 +95,7 @@ model User {
   auditLogs       AuditLog[]
 
   @@unique([tenantId, email])
+  @@map("User")
 }
 
 model Project {
@@ -113,6 +113,7 @@ model Project {
   tasks Task[]
 
   @@index([tenantId])
+  @@map("Project")
 }
 
 model Task {
@@ -132,6 +133,7 @@ model Task {
   updatedAt    DateTime   @updatedAt
 
   @@index([tenantId, projectId])
+  @@map("Task")
 }
 
 model AuditLog {
@@ -145,4 +147,6 @@ model AuditLog {
   entityId   String?
   ipAddress  String?
   createdAt  DateTime @default(now())
+
+  @@map("AuditLog")
 }

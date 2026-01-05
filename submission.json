@@ -1,45 +1,28 @@
 {
+  "projectName": "Multi-Tenant SaaS Platform",
+  "studentName": "Dhanasiri",
+  "repositoryUrl": "https://github.com/yourusername/multi-tenant-saas-platform",
+  "deployedUrls": {
+    "frontend": "http://localhost:3000",
+    "backend": "http://localhost:5000"
+  },
   "testCredentials": {
     "superAdmin": {
       "email": "superadmin@system.com",
-      "password": "Admin@123",
+      "password": "Admin123",
       "role": "super_admin",
-      "tenantId": null
+      "subdomain": ""
     },
-    "tenants": [
-      {
-        "name": "Demo Company",
-        "subdomain": "demo",
-        "status": "active",
-        "subscriptionPlan": "pro",
-        "admin": {
-          "email": "admin@demo.com",
-          "password": "Demo@123",
-          "role": "tenant_admin"
-        },
-        "users": [
-          {
-            "email": "user1@demo.com",
-            "password": "User@123",
-            "role": "user"
-          },
-          {
-            "email": "user2@demo.com",
-            "password": "User@123",
-            "role": "user"
-          }
-        ],
-        "projects": [
-          {
-            "name": "Project Alpha",
-            "description": "First demo project"
-          },
-          {
-            "name": "Project Beta",
-            "description": "Second demo project"
-          }
-        ]
-      }
-    ]
+    "tenantAdmin": {
+      "email": "admin@demo.com",
+      "password": "Demo123",
+      "subdomain": "demo",
+      "role": "tenant_admin"
+    }
+  },
+  "dockerInstructions": {
+    "setup": "docker-compose up -d",
+    "teardown": "docker-compose down -v",
+    "logs": "docker-compose logs -f"
   }
 }

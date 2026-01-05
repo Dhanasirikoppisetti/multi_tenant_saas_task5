@@ -2,9 +2,9 @@ const express = require("express");
 const { body } = require("express-validator");
 
 const taskController = require("../controllers/task.controller");
-const authenticate = require("../middleware/auth");
-const authorize = require("../middleware/authorize");
-const tenantIsolation = require("../middleware/tenantIsolation");
+const authenticate = require("../middleware/auth.middleware");
+const authorize = require("../middleware/authorize.middleware");
+const tenantIsolation = require("../middleware/tenantIsolation.middleware");
 
 const router = express.Router();
 
@@ -64,5 +64,13 @@ router.delete(
   tenantIsolation,
   taskController.deleteTask
 );
+// Get tasks assigned to current user
+router.get(
+  "/tasks/my",
+  authenticate,
+  tenantIsolation,
+  taskController.getMyTasks
+);
+
 
 module.exports = router;

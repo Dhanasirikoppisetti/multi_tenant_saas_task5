@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import api from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import AppLayout from "../components/AppLayout";
+import api from "../services/httpClient";
+import { useAuth } from "../context/AuthProvider";
 import { Link } from "react-router-dom";
+import "../styles/pages/projects.css";
 
 export default function Projects() {
   const { user } = useAuth();
@@ -84,185 +85,216 @@ export default function Projects() {
     fetchProjects();
   };
 
-  return (
-    <Layout>
-      <h2>Projects</h2>
+    return (
+    <AppLayout>
+      <div className="projects-page">
+        <div className="projects-header">
+          <h1 className="projects-title">Projects</h1>
+        </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* -------- CREATE PROJECT (ADMIN ONLY) -------- */}
-      {isAdmin && (
-        <form
-          onSubmit={createProject}
-          style={{
-            background: "white",
-            padding: "16px",
-            borderRadius: "10px",
-            border: "1px solid #e5e7eb",
-            marginBottom: "24px",
-            maxWidth: "500px",
-          }}
-        >
-          <h3>Create New Project</h3>
+        {/* CREATE PROJECT (ADMIN ONLY) */}
+        {isAdmin && (
+          <div className="project-create-card">
+            <h3 className="project-create-title">Create New Project</h3>
 
-          <div style={{ marginBottom: "10px" }}>
-            <label>Project Name</label>
-            <input
-              required
-              value={createProjectForm.name}
-              onChange={(e) =>
-                setCreateProjectForm({
-                  ...createProjectForm,
-                  name: e.target.value,
-                })
-              }
-            />
+            <form className="project-create-form" onSubmit={createProject}>
+              <div className="project-create-field">
+                <label className="project-create-label">Project Name</label>
+                <input
+                  className="project-create-input"
+                  required
+                  value={createProjectForm.name}
+                  onChange={(e) =>
+                    setCreateProjectForm({
+                      ...createProjectForm,
+                      name: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="project-create-field">
+                <label className="project-create-label">Status</label>
+                <select
+                  className="project-create-select"
+                  value={createProjectForm.status}
+                  onChange={(e) =>
+                    setCreateProjectForm({
+                      ...createProjectForm,
+                      status: e.target.value,
+                    })
+                  }
+                >
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <div className="project-create-field project-create-field-full">
+                <label className="project-create-label">Description</label>
+                <textarea
+                  className="project-create-textarea"
+                  value={createProjectForm.description}
+                  onChange={(e) =>
+                    setCreateProjectForm({
+                      ...createProjectForm,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? "Creating..." : "Create Project"}
+              </button>
+            </form>
           </div>
+        )}
 
-          <div style={{ marginBottom: "10px" }}>
-            <label>Description</label>
-            <textarea
-              value={createProjectForm.description}
-              onChange={(e) =>
-                setCreateProjectForm({
-                  ...createProjectForm,
-                  description: e.target.value,
-                })
-              }
-            />
-          </div>
+        {/* PROJECT LIST */}
+        <div className="projects-grid">
+          {projects.map((p) => {
+            const isEditing = editingProjectId === p.id;
 
-          <div style={{ marginBottom: "15px" }}>
-            <label>Status</label>
-            <select
-              value={createProjectForm.status}
-              onChange={(e) =>
-                setCreateProjectForm({
-                  ...createProjectForm,
-                  status: e.target.value,
-                })
-              }
-            >
-              <option value="active">Active</option>
-              <option value="archived">Archived</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
+            return (
+              <div key={p.id} className="project-card">
+                {isEditing ? (
+                  <>
+                    <div className="project-card-name">Edit Project</div>
 
-          <button disabled={loading}>
-            {loading ? "Creating..." : "Create Project"}
-          </button>
-        </form>
-      )}
+                    <div className="project-card-field">
+                      <label className="project-card-label">Name</label>
+                      <input
+                        className="project-card-input"
+                        value={editProjectForm.name}
+                        onChange={(e) =>
+                          setEditProjectForm({
+                            ...editProjectForm,
+                            name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
 
-      {/* -------- PROJECT LIST -------- */}
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {projects.map((p) => {
-          const isEditing = editingProjectId === p.id;
+                    <div className="project-card-field">
+                      <label className="project-card-label">
+                        Description
+                      </label>
+                      <textarea
+                        className="project-card-textarea"
+                        value={editProjectForm.description}
+                        onChange={(e) =>
+                          setEditProjectForm({
+                            ...editProjectForm,
+                            description: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
 
-          return (
-            <li
-              key={p.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "6px",
-                padding: "15px",
-                marginBottom: "15px",
-                background: "white",
-              }}
-            >
-              {/* -------- EDIT MODE (ADMIN ONLY) -------- */}
-              {isEditing ? (
-                <>
-                  <h4>Edit Project</h4>
+                    <div className="project-card-field">
+                      <label className="project-card-label">Status</label>
+                      <select
+                        className="project-card-select"
+                        value={editProjectForm.status}
+                        onChange={(e) =>
+                          setEditProjectForm({
+                            ...editProjectForm,
+                            status: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="active">Active</option>
+                        <option value="archived">Archived</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
 
-                  <div style={{ marginBottom: "10px" }}>
-                    <label>Name</label>
-                    <input
-                      value={editProjectForm.name}
-                      onChange={(e) =>
-                        setEditProjectForm({
-                          ...editProjectForm,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: "10px" }}>
-                    <label>Description</label>
-                    <textarea
-                      value={editProjectForm.description}
-                      onChange={(e) =>
-                        setEditProjectForm({
-                          ...editProjectForm,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: "15px" }}>
-                    <label>Status</label>
-                    <select
-                      value={editProjectForm.status}
-                      onChange={(e) =>
-                        setEditProjectForm({
-                          ...editProjectForm,
-                          status: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="active">Active</option>
-                      <option value="archived">Archived</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <button onClick={() => updateProject(p.id)}>Save</button>{" "}
-                  <button onClick={cancelEdit}>Cancel</button>
-                </>
-              ) : (
-                <>
-                  {/* -------- VIEW MODE (ALL USERS) -------- */}
-                  <h4>{p.name}</h4>
-
-                  {p.description && <p>{p.description}</p>}
-
-                  <p>
-                    <b>Status:</b> {p.status}
-                  </p>
-
-                  <p>
-                    <b>Created:</b>{" "}
-                    {new Date(p.createdAt).toLocaleDateString()}
-                  </p>
-
-                  <p>
-                    <b>Updated:</b>{" "}
-                    {new Date(p.updatedAt).toLocaleDateString()}
-                  </p>
-
-                  {/* View tasks visible for everyone */}
-                  <Link to={`/projects/${p.id}`}>View Tasks</Link>
-
-                  {/* Admin actions only */}
-                  {isAdmin && (
-                    <div style={{ marginTop: "10px" }}>
-                      <button onClick={() => startEditProject(p)}>Edit</button>{" "}
-                      <button onClick={() => deleteProject(p.id)}>
-                        Delete
+                    <div className="project-card-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => updateProject(p.id)}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={cancelEdit}
+                      >
+                        Cancel
                       </button>
                     </div>
-                  )}
-                </>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+                  </>
+                ) : (
+                  <>
+                    <div className="project-card-name">{p.name}</div>
 
-      {projects.length === 0 && <p>No projects found</p>}
-    </Layout>
+                    {p.description && (
+                      <div className="project-card-desc">
+                        {p.description}
+                      </div>
+                    )}
+
+                    <div className="project-card-status">
+                      <span className="badge badge-green">{p.status}</span>
+                    </div>
+
+                    <div className="project-card-meta">
+                      <span>
+                        Created:{" "}
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </span>
+                      <span>
+                        Updated:{" "}
+                        {new Date(p.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+               <div className="project-card-footer">
+  <Link to={`/projects/${p.id}`} className="project-card-link">
+    View tasks
+  </Link>
+
+  {isAdmin && (
+    <div className="project-card-actions">
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={() => startEditProject(p)}
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        className="btn btn-danger"
+        onClick={() => deleteProject(p.id)}
+      >
+        Delete
+      </button>
+    </div>
+  )}
+</div>
+
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {projects.length === 0 && !loading && (
+          <p style={{ marginTop: "1rem" }}>No projects found</p>
+        )}
+      </div>
+    </AppLayout>
   );
 }

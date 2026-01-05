@@ -1,4 +1,5 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
+
 const { validationResult } = require("express-validator");
 
 const prisma = require("../config/prisma");

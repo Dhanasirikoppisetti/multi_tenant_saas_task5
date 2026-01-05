@@ -1,0 +1,123 @@
+/* main wrapper */
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f3f4f6;
+  padding: 24px 16px; /* base padding */
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px; /* 480 → 420 */
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+  padding: 20px 22px;
+}
+
+
+/* form layout */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.register-input {
+  width: 95%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #f9fafb;
+}
+
+/* password row */
+.register-password-row {
+  display: flex;
+  gap: 6px;
+}
+
+.register-password-row .register-input {
+  flex: 1;
+}
+.register-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 8px 0 10px;
+}
+
+/* make checkbox not stretch */
+.register-checkbox-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+
+/* button */
+.register-submit {
+  margin-top: 6px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* ===== breakpoints ===== */
+
+/* tablets: slightly wider padding */
+@media (max-width: 900px) {
+  .register-page {
+    padding: 20px 12px;
+  }
+}
+
+/* phones: card edge-to-edge, smaller text */
+@media (max-width: 640px) {
+  .register-page {
+    align-items: flex-start;
+    padding: 16px 10px 24px;
+  }
+
+  .register-card {
+    padding: 18px 14px;
+    border-radius: 12px;
+  }
+
+  .register-title {
+    font-size: 18px;
+  }
+
+  .register-subtitle {
+    font-size: 12px;
+  }
+
+  .register-input {
+    font-size: 13px;
+  }
+
+  .register-password-row {
+    flex-direction: column; /* stack input + button on very small screens */
+  }
+
+  .register-toggle-btn {
+    align-self: flex-end;
+    width: auto;
+    padding-inline: 10px;
+  }
+}
