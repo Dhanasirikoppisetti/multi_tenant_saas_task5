@@ -1,179 +1,239 @@
-# Multi-Tenant SaaS Platform – Project & Task Management
+# Multi-Tenant SaaS Task Management Platform
+A multi-tenant SaaS task management platform where organizations (tenants) can manage projects, users, and tasks with strict data isolation per tenant.
+Target audience: small and medium teams that need a hosted task/project management tool with role-based access control.
+​
 
-A full-stack **multi-tenant SaaS application** that allows multiple organizations (tenants) to manage projects and tasks with **strict data isolation**.
+### Features
+Tenant registration and onboarding with a dedicated tenant admin.
+​
 
-Built for teams, startups, and organizations that require **role-based access control** and **scalable architecture**.
+Super admin panel to manage tenants, plans, and statuses.
+​
 
----
+Role-based access control: super admin, tenant admin, regular user.
+​
 
-## Features
+User management per tenant (create, update, deactivate users).
+​
 
-- Multi-tenant architecture with strict tenant data isolation  
-- Role-based access control (Super Admin, Tenant Admin, User)  
-- Tenant registration with unique subdomains  
-- Secure authentication using JWT  
-- Project and task management per tenant  
-- Task assignment, priority, and due-date handling  
-- Audit logging for critical system actions  
-- Subscription plans with user and project limits  
-- Dockerized setup for one-command startup  
+Project management (create projects, assign to tenants).
+​
 
----
+Task management with priorities, assignees, and due dates.
+​
 
-## Technology Stack
+Task status workflow (todo, in-progress, completed).
+​
 
-### Frontend
-- React 18  
-- Vite 5  
-- Axios  
-- CSS (Responsive Design)  
+Tenant-scoped dashboards and statistics (projects, tasks, users).
+​
 
-### Backend
-- Node.js 18  
-- Express.js  
-- Prisma ORM  
-- JWT Authentication  
+JWT-based authentication with secure password hashing.
+​
 
-### Database
-- PostgreSQL (Neon – Serverless)  
+Health check endpoint for uptime monitoring.
+​
 
-### DevOps & Tools
-- Docker  
-- Docker Compose  
-- Render (Backend Deployment)  
-- Vercel (Frontend Deployment)  
+### Technology Stack
+#### Frontend
+React 18.x
 
----
+Vite 5.x / 7.x (React template)
+​
 
-## Architecture Overview
-
-The system follows a **layered architecture** with strict tenant isolation.
-
-Each request is authenticated using **JWT** and scoped to a tenant using middleware.
-The frontend communicates with the backend via **REST APIs**, and all tenant data
-is isolated at the database level using a `tenant_id`.
-
-![System Architecture](docs/images/system-architecture.png)
-
----
-
-## 🔐 Audit Logs
-
-### Overview
-This application includes an **Audit Logging system** to track critical actions performed within the platform.  
-Audit logs improve **security, traceability, and accountability**, which are essential for multi-tenant SaaS systems.
-
----
-
-### What Is Logged
-The system automatically records the following actions:
-
-- User creation, update, and deletion
-- Project creation, update, and deletion
-- Task creation, updates, status changes, and deletion
-- Tenant updates (name and subscription plan changes)
-- Administrative actions performed by Super Admins
----
-
-### Where Audit Logs Are Stored
-Audit logs are stored in the **`audit_logs` table** in the PostgreSQL database.
----
-
-### How to Access Audit Logs
-
-#### Database Access (superadmin / Debugging)
-Audit logs can be inspected directly from the database:
-
-```sql
-SELECT * FROM audit_logs ORDER BY created_at DESC;
-```
-
-## Installation & Setup
-
-### Prerequisites
-- Node.js 18+  
-- Docker & Docker Compose  
-
-### Local Setup
-
-```bash
-git clone https://github.com/karthikgarikina/multi-tenant-saas-platform
-cd multi-tenant-saas-platform
-```
-### Docker Setup (Recommended)
-
-```bash
-docker compose down
-
-docker-compose up --build
-```
+React Router 6.x
 
 #### Backend
+Node.js 20.x
 
-```bash
+Express 5.2.1
+
+Prisma ORM 6.19.1
+
+@prisma/client 6.19.1
+
+JSON Web Token 9.0.3
+
+bcryptjs 3.0.3
+
+express-validator 7.3.1
+
+pg 8.16.3
+
+#### Database
+PostgreSQL (Render managed instance)
+​
+
+Deployment / Containerization
+Docker (optional for local)
+​
+
+Backend: Render Web Service (https://multi-tenant-saas-task5.onrender.com)
+​
+
+Frontend: Netlify (https://rainbow-medovik-7ab6fd.netlify.app)
+​
+
+### Architecture Overview
+The application follows a frontend–backend–database architecture:
+
+React/Vite frontend communicates with the backend using REST APIs.
+
+Node/Express backend exposes /api/... endpoints, applies authentication, authorization, and tenant isolation middleware.
+
+Prisma connects to a single PostgreSQL database; tenant-specific tables include a tenantId column to enforce data isolation.
+​
+
+Include an architecture diagram image at docs/system-architecture.png
+
+
+![Architecture Diagram](docs/system-architecture.png)
+Installation & Setup (Local)
+Prerequisites
+Node.js 18+
+
+npm
+
+PostgreSQL running locally
+
+### Git
+
+#### 1. Clone Repository
+bash
+git clone https://github.com/Dhanasirikoppisetti/multi_tenant_saas_task5
+cd multi_tenant_saas_task5
+#### 2. Backend Setup
+bash
 cd backend
 npm install
+Create backend/.env:
+
+
+DATABASE_URL=postgresql://<user>:<password>@localhost:5432/multi_tenant_saas_task5
+JWT_SECRET=your-local-jwt-secret
+NODE_ENV=development
+PORT=5000
+Generate Prisma client and run migrations:
+
+
+npx prisma generate
 npx prisma migrate dev
-npx prisma db seed
-npm run dev
-```
+node prisma/seed.js    # or npm run seed if you add a script
+Start backend:
 
-#### Frontend
 
-```bash
-cd frontend
+npm run dev    # backend on http://localhost:5000
+#### 3. Frontend Setup
+
+cd ../frontend
 npm install
-npm run dev
-```
+Create frontend/.env:
 
-- Frontend: http://localhost:3000  
-- Backend: http://localhost:5000/api/health  
-
----
-
-## Environment Variables
-
-### Backend
-- `DATABASE_URL` – PostgreSQL connection string  
-- `JWT_SECRET` – Secret key for JWT signing  
-- `JWT_EXPIRES_IN` – Token expiration time  
-- `FRONTEND_URL` – Allowed frontend domain for CORS  
-
-### Frontend
-- `VITE_API_URL` – Backend API base URL  
-
----
-
-## API Testing (Postman)
-A complete Postman collection is provided:
-
-Multi-Tenant-SaaS.postman_collection.json
-
-Import this file into Postman to test all APIs.
+VITE_API_URL=http://localhost:5000
+Start frontend:
 
 
----
+npm run dev    # typically http://localhost:3000
+Environment Variables
+Backend
+DATABASE_URL – PostgreSQL connection string used by Prisma.
+​
 
-## 🔐 Super Admin Access
+JWT_SECRET – secret key used to sign JWT tokens.
 
-Default Super Admin credentials are provided for demo and testing purposes:
+NODE_ENV – development or production.
 
-**Email:**  
-`superadmin@system.com`
+PORT – port for Express app (5000 locally; Render injects its own).
+​
 
-**Password:**  
-`Admin@123`
+Frontend
+VITE_API_URL – base URL for backend API
 
-### Notes
-- All other credentials are there clearly in seed file.
----
+Local: http://localhost:5000
 
-## Live Demo
+Production: https://multi-tenant-saas-task5.onrender.com
+​
 
-- **Frontend**: https://tenantspace.vercel.app  
-- **Backend (Health Check)**: https://multi-tenant-saas-platform-tu98.onrender.com/api/health 
-- **Demo Video**: https://youtu.be/D0UkljjS5Ck?si=HI3DqtKFXdtyNKBp  
+### API Documentation
+Full API documentation is available in docs/API.md (or Swagger/Postman collection if you choose that). It includes:
 
-> ⚠️ **Note:** The backend is hosted on Render’s free tier.  
-> On the first request, the server may take **30–60 seconds** to wake up from sleep.  
-> Please wait and refresh if the initial request is slow.
+All 19 API endpoints with method, URL, auth requirement.
+
+Request/response examples for authentication, tenant, user, project, and task APIs.
+
+Explanation of JWT authentication and how tokens are used in Authorization: Bearer <token> header.
+​
+
+### Deployment
+#### Backend – Render
+Root directory: backend
+
+ Build command:
+
+
+npm install && npx prisma generate
+Start command:
+
+
+npm start
+Environment variables (Render dashboard → Environment):
+
+
+DATABASE_URL=<Render internal DB URL>
+JWT_SECRET=<strong-random-secret>
+NODE_ENV=production
+PORT=5000
+After first successful deploy, run from Render Shell:
+
+
+npx prisma migrate deploy
+node prisma/seed.js
+​
+
+#### Frontend – Netlify
+Base directory: frontend
+
+Build command: npm run build
+
+Publish directory: dist
+
+Environment variables (Netlify Site settings → Environment):
+
+VITE_API_URL=https://multi-tenant-saas-task5.onrender.com
+Deploy; production URL (example): https://rainbow-medovik-7ab6fd.netlify.app.
+​
+
+### Demo Credentials
+These credentials are used both in prisma/seed.js and submission.json so evaluators can test the app.
+​
+
+Super Admin
+
+Email: superadmin@system.com
+
+Password: Admin123
+
+Role: super_admin
+
+Tenant Admin (Demo Company)
+
+Tenant: Demo Company (subdomain: demo)
+
+Email: admin@demo.com
+
+Password: Demo123!
+
+Role: tenant_admin
+
+Sample Users
+
+user1@demo.com / User123! (role: user)
+
+user2@demo.com / User123! (optional)
+
+These accounts are used in automated tests and for manual demo of multi-tenant behavior.
+
+### Demo Video
+A complete demo video (architecture, multi-tenancy explanation, and feature walkthrough) is available on YouTube:
+
+Video link: https://youtu.be/<your-video-id>

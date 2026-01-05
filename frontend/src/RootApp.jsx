@@ -9,9 +9,6 @@ import Users from "./pages/Users";
 import Register from "./pages/Register";
 import Tenants from "./pages/Tenants";
 
-const healthRoutes = require('./routes/health.routes');
-
-app.use('/api', healthRoutes);
 export default function App() {
   return (
     <AuthProvider>
@@ -21,7 +18,6 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-
           <Route
             path="/dashboard"
             element={
@@ -30,7 +26,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
- 
+
           <Route
             path="/projects"
             element={
@@ -39,6 +35,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+
           <Route
             path="/projects/:projectId"
             element={
@@ -47,6 +44,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+
           <Route
             path="/users"
             element={
@@ -55,6 +53,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+
           <Route
             path="/tenants"
             element={
@@ -63,7 +62,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
         </Routes>
       </BrowserRouter>
     </AuthProvider>
